@@ -31,7 +31,7 @@ void main() {
 			// facing shadowlightposition
 			if (texture2D(shadowtex0, shadowPos.xy).r < shadowPos.z) {
 				// in shadow
-				color.rgb *= torch_color * lmcoord.x + (ambient * 10);
+				color.rgb *= torch_color * lmcoord.x + (ambient * 10) * sky;
 			}
 			else {
 				// in direct sunlight
@@ -40,7 +40,7 @@ void main() {
 		}
 
 		if (shadowPos == vec4(0.)) {
-			color.rgb *= torch_color * lmcoord.x + (ambient * 10);
+			color.rgb *= torch_color * lmcoord.x + (ambient * 10) * sky;
 		}
 	#else
 		color.rgb *= clamp(torch_color * lmcoord.x + (lightDot * sky * sky_light_color) + sky * 0.5+ ambient, 0. ,1.);
