@@ -27,7 +27,7 @@ void main() {
 	#if SHADOWS_ENABLED == 1
 		if (lightDot > 0.01) { // the 0.01 here helps prevent against flickering on the north face of blocks
 			// facing shadowlightposition
-			if (texture2D(shadowtex0, shadowPos.xy).r < shadowPos.z) {
+			if (texture2D(shadowtex1, shadowPos.xy).r < shadowPos.z) {
 				// in shadow
 				color.rgb *= torch_color * lmcoord.x + (ambient * 10) * sky;
 			}
