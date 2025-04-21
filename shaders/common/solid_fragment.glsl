@@ -45,8 +45,8 @@ void main() {
 		#endif
 
 		if (lightDot > 0.01) { // the 0.01 here helps prevent against flickering on the north face of blocks
-			color.rgb *= torch_color * lmcoord.x + (ambient * 20) * sky + (1.0 - shadow);
-			color.rgb *= clamp(torch_color * lmcoord.x + (lightDot * sky * sky_light_color) + sky * 0.5+ ambient, 0. ,1.);
+			color.rgb *= (ambient * 20) * sky + (1.0 - shadow);
+			color.rgb *= clamp(torch_color * lmcoord.x + (lightDot * sky * sky_light_color) + sky * 0.5, 0. ,1.);
 		}
 
 		if (shadowPos == vec4(0.)) {
