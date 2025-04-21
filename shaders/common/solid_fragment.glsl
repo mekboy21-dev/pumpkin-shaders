@@ -1,7 +1,6 @@
 uniform sampler2D lightmap;
 uniform sampler2D texture;
 
-uniform sampler2D shadowcolor0;
 uniform sampler2D shadowtex0;
 uniform sampler2D shadowtex1;
 
@@ -25,21 +24,35 @@ void main() {
 	float sky = texture2D(lightmap, lmcoord).y * lmcoord.y;
 	
 	#if SHADOWS_ENABLED == 1
-		if (lightDot > 0.01) { // the 0.01 here helps prevent against flickering on the north face of blocks
-			// facing shadowlightposition
+		float shadow = 0.0;
+		#if SOFTEN_SHADOWS == 1 
+		
+    		vec2 texelSize = 1.0 / textureSize(shadowtex1, 0);
+    		for(int x = -1; x <= 1; ++x)
+    		{
+        		for(int y = -1; y <= 1; ++y)
+        		{
+           			float pcfDepth = texture2D(shadowtex1, shadowPos.xy + vec2(x, y) * texelSize).r; 
+            		shadow += shadowPos.z > pcfDepth  ? 1.0 : 0.0;        
+        		}    
+    		}
+
+			shadow /= 9.0;
+		#else
 			if (texture2D(shadowtex1, shadowPos.xy).r < shadowPos.z) {
-				// in shadow
-				color.rgb *= torch_color * lmcoord.x + (ambient * 10) * sky;
+				shadow = 1.0;
 			}
-			else {
-				// in direct sunlight
-				color.rgb *= clamp(torch_color * lmcoord.x + (lightDot * sky * sky_light_color) + sky * 0.5+ ambient, 0. ,1.);
-			}
+		#endif
+
+		if (lightDot > 0.01) { // the 0.01 here helps prevent against flickering on the north face of blocks
+			color.rgb *= torch_color * lmcoord.x + (ambient * 20) * sky + (1.0 - shadow);
+			color.rgb *= clamp(torch_color * lmcoord.x + (lightDot * sky * sky_light_color) + sky * 0.5+ ambient, 0. ,1.);
 		}
 
 		if (shadowPos == vec4(0.)) {
 			color.rgb *= torch_color * lmcoord.x + (ambient * 10) * sky;
 		}
+
 	#else
 		color.rgb *= clamp(torch_color * lmcoord.x + (lightDot * sky * sky_light_color) + sky * 0.5+ ambient, 0. ,1.);
 	#endif

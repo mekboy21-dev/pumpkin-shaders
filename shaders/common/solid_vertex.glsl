@@ -10,6 +10,7 @@ varying vec2 texcoord;
 varying vec4 glcolor;
 varying float lightDot;
 varying vec4 shadowPos;
+varying float bias;
 
 #include "/settings.glsl"
 #include "/shadow_distort.glsl"
@@ -28,7 +29,7 @@ void main() {
 			// in sunlight 
 			vec4 playerPos = gbufferModelViewInverse * viewPos;
 			shadowPos = shadowProjection * (shadowModelView * playerPos);
-			float bias = computeBias(shadowPos.xyz);
+			bias = computeBias(shadowPos.xyz);
 			shadowPos.xyz = distort(shadowPos.xyz); 
 			shadowPos.xyz = shadowPos.xyz * 0.5 + 0.5;
 
