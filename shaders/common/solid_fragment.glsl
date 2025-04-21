@@ -50,7 +50,7 @@ void main() {
 		}
 
 		if (shadowPos == vec4(0.)) {
-			color.rgb *= torch_color * lmcoord.x + 1. - SHADOW_BRIGHTNESS * sky;
+			color.rgb *= torch_color * lmcoord.x + (1. - SHADOW_BRIGHTNESS) * sky;
 		}
 
 	#else

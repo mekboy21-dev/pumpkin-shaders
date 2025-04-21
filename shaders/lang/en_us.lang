@@ -1,0 +1,18 @@
+
+screen.LIGHT_COLORS=Light Colors
+screen.BLOCK_LIGHT=Block Light Color
+option.BLOCK_LIGHT_COLOR_R=Red
+option.BLOCK_LIGHT_COLOR_G=Green
+option.BLOCK_LIGHT_COLOR_B=Blue
+option.BLOCK_LIGHT_BRIGHTNESS=Brightness
+
+screen.SKY_LIGHT=Sky Light Color
+option.SKY_LIGHT_COLOR_R=Red
+option.SKY_LIGHT_COLOR_G=Green
+option.SKY_LIGHT_COLOR_B=Blue
+
+screen.SHADOWS=Shadows
+option.SHADOWS_ENABLED=Enable Shadows
+option.SHADOW_BIAS = Shadow Bias
+option.SOFTEN_SHADOWS=Soften Shadows (experimental)
+option.shadowMapResolution = Shadow Map Resolution
