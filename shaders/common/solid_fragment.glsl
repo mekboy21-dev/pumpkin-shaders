@@ -1,8 +1,11 @@
 uniform sampler2D lightmap;
 uniform sampler2D texture;
 
-uniform sampler2D shadowtex0;
 uniform sampler2D shadowtex1;
+uniform sampler2D noisetex;
+
+uniform float viewWidth;
+uniform float viewHeight;
 
 uniform vec4 entityColor;
 
@@ -12,9 +15,17 @@ varying vec4 glcolor;
 varying float lightDot;
 varying vec4 shadowPos;
 
-
-
 #include "/settings.glsl"
+
+#if SOFTEN_SHADOWS == 1 
+float offset_lookup(vec2 offset, vec2 texelSize){
+	float result = 0.;
+	float pcfDepth = texture2D(shadowtex1, shadowPos.xy + offset * texelSize).r; 
+   	result += shadowPos.z > pcfDepth  ? 1.0 : 0.0;   
+
+	return result;
+}
+#endif
 
 void main() {
 	vec4 color = texture2D(texture, texcoord) * glcolor;
@@ -26,18 +37,69 @@ void main() {
 	#if SHADOWS_ENABLED == 1
 		float shadow = 0.0;
 		#if SOFTEN_SHADOWS == 1 
-		
-    		vec2 texelSize = 1.0 / textureSize(shadowtex1, 0);
-    		for(int x = -1; x <= 1; ++x)
-    		{
-        		for(int y = -1; y <= 1; ++y)
-        		{
-           			float pcfDepth = texture2D(shadowtex1, shadowPos.xy + vec2(x, y) * texelSize).r; 
-            		shadow += shadowPos.z > pcfDepth  ? 1.0 : 0.0;        
-        		}    
-    		}
+				ivec2 screenCoord = ivec2(texcoord * vec2(viewWidth, viewHeight)); // exact pixel coordinate onscreen
+				vec2 texelSize = 1.0 / textureSize(shadowtex1, 0);
+				ivec2 noiseCoord = screenCoord % 64;
+				vec2 offset = vec2(texelFetch(noisetex, noiseCoord, 0).r);
 
-			shadow /= 9.0;
+				shadow = ( // this may look horrific but it helps when it comes to performance on some lower end hardware
+					offset_lookup(offset + vec2(-3.0, -3.0), texelSize) +
+					offset_lookup(offset + vec2(-2.0, -3.0), texelSize) +
+					offset_lookup(offset + vec2(-1.0, -3.0), texelSize) +
+					offset_lookup(offset + vec2(0.0, -3.0), texelSize) +
+					offset_lookup(offset + vec2(1.0, -3.0), texelSize) +
+					offset_lookup(offset + vec2(2.0, -3.0), texelSize) +
+					offset_lookup(offset + vec2(3.0, -3.0), texelSize) +
+
+					offset_lookup(offset + vec2(-3.0, -2.0), texelSize) +
+					offset_lookup(offset + vec2(-2.0, -2.0), texelSize) +
+					offset_lookup(offset + vec2(-1.0, -2.0), texelSize) +
+					offset_lookup(offset + vec2(0.0, -2.0), texelSize) +
+					offset_lookup(offset + vec2(1.0, -2.0), texelSize) +
+					offset_lookup(offset + vec2(2.0, -2.0), texelSize) +
+					offset_lookup(offset + vec2(3.0, -2.0), texelSize) +
+
+					offset_lookup(offset + vec2(-3.0, -1.0), texelSize) +
+					offset_lookup(offset + vec2(-2.0, -1.0), texelSize) +
+					offset_lookup(offset + vec2(-1.0, -1.0), texelSize) +
+					offset_lookup(offset + vec2(0.0, -1.0), texelSize) +
+					offset_lookup(offset + vec2(1.0, -1.0), texelSize) +
+					offset_lookup(offset + vec2(2.0, -1.0), texelSize) +
+					offset_lookup(offset + vec2(3.0, -1.0), texelSize) +
+
+					offset_lookup(offset + vec2(-3.0, 0.0), texelSize) +
+					offset_lookup(offset + vec2(-2.0, 0.0), texelSize) +
+					offset_lookup(offset + vec2(-1.0, 0.0), texelSize) +
+					offset_lookup(offset + vec2(0.0, 0.0), texelSize) +
+					offset_lookup(offset + vec2(1.0, 0.0), texelSize) +
+					offset_lookup(offset + vec2(2.0, 0.0), texelSize) +
+					offset_lookup(offset + vec2(3.0, 0.0), texelSize) +
+
+					offset_lookup(offset + vec2(-3.0, 1.0), texelSize) +
+					offset_lookup(offset + vec2(-2.0, 1.0), texelSize) +
+					offset_lookup(offset + vec2(-1.0, 1.0), texelSize) +
+					offset_lookup(offset + vec2(0.0, 1.0), texelSize) +
+					offset_lookup(offset + vec2(1.0, 1.0), texelSize) +
+					offset_lookup(offset + vec2(2.0, 1.0), texelSize) +
+					offset_lookup(offset + vec2(3.0, 1.0), texelSize) +
+
+					offset_lookup(offset + vec2(-3.0, 2.0), texelSize) +
+					offset_lookup(offset + vec2(-2.0, 2.0), texelSize) +
+					offset_lookup(offset + vec2(-1.0, 2.0), texelSize) +
+					offset_lookup(offset + vec2(0.0, 2.0), texelSize) +
+					offset_lookup(offset + vec2(1.0, 2.0), texelSize) +
+					offset_lookup(offset + vec2(2.0, 2.0), texelSize) +
+					offset_lookup(offset + vec2(3.0, 2.0), texelSize) +
+
+					offset_lookup(offset + vec2(-3.0, 3.0), texelSize) +
+					offset_lookup(offset + vec2(-2.0, 3.0), texelSize) +
+					offset_lookup(offset + vec2(-1.0, 3.0), texelSize) +
+					offset_lookup(offset + vec2(0.0, 3.0), texelSize) +
+					offset_lookup(offset + vec2(1.0, 3.0), texelSize) +
+					offset_lookup(offset + vec2(2.0, 3.0), texelSize) +
+					offset_lookup(offset + vec2(3.0, 3.0), texelSize)
+				) * 0.02040816326;
+
 		#else
 			if (texture2D(shadowtex1, shadowPos.xy).r < shadowPos.z) {
 				shadow = 1.0;

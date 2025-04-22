@@ -14,3 +14,11 @@
 #define SOFTEN_SHADOWS 0 //[0 1]
 #define SHADOW_BRIGHTNESS 0.75
 const int shadowMapResolution = 1024; //[256 1024 2048 4096]
+
+#if SOFTEN_SHADOWS == 1
+    const bool shadowtex1Nearest = true; 
+    const bool shadowcolor0Nearest = true;
+#else
+    const bool shadowtex1Nearest = false; 
+    const bool shadowcolor0Nearest = false;
+#endif
