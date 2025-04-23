@@ -9,7 +9,7 @@
 
 #define SHADOWS_ENABLED 
 
-#define SHADOW_BIAS 1.0 //[0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0]
+#define SHADOW_BIAS 1.3 //[0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5]
 #define SHADOW_DISTORT_FACTOR 0.2
 #define SOFTEN_SHADOWS 0 //[0 1 2]
 #define SHADOW_BRIGHTNESS 0.75
