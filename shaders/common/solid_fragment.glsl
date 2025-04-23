@@ -36,7 +36,7 @@ void main() {
 	
 	#ifdef SHADOWS_ENABLED
 		float shadow = 0.0;
-		#if SOFTEN_SHADOWS == 2 
+		#if SOFTEN_SHADOWS == 3 
 				// use 16 samples - gives better results
 				vec2 texelSize = 1.0 / textureSize(shadowtex1, 0);
 
@@ -45,7 +45,18 @@ void main() {
 						shadow += offset_lookup(vec2(x,y), texelSize);
 					}
 				}
-				shadow /= 16;
+				shadow /= 16.0;
+		#elif SOFTEN_SHADOWS == 2
+				// nine samples - how it was implemented in V.0.5
+				vec2 texelSize = 1.0 / textureSize(shadowtex1, 0);
+									
+				for(int x = -1; x <= 1; ++x) {
+					for(int y = -1; y <= 1; ++y) {
+						shadow += offset_lookup(vec2(x,y), texelSize);
+					}
+				}
+
+				shadow /= 9.0;
 		#elif SOFTEN_SHADOWS == 1
 				// use 4 samples and dither - might be more performant on lower end hardware
 				vec2 texelSize = 1.0 / textureSize(shadowtex1, 0);
