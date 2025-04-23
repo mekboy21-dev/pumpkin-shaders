@@ -17,7 +17,7 @@ varying vec4 shadowPos;
 
 #include "/settings.glsl"
 
-#if SOFTEN_SHADOWS == 1 
+#if SOFTEN_SHADOWS != 0 
 float offset_lookup(vec2 offset, vec2 texelSize){
 	float result = 0.;
 	float pcfDepth = texture2D(shadowtex1, shadowPos.xy + offset * texelSize).r; 
@@ -34,72 +34,35 @@ void main() {
 	float ambient = 0.025; // no idea if this is even the right term but it makes unlit places brighter
 	float sky = texture2D(lightmap, lmcoord).y * lmcoord.y;
 	
-	#if SHADOWS_ENABLED == 1
+	#ifdef SHADOWS_ENABLED
 		float shadow = 0.0;
-		#if SOFTEN_SHADOWS == 1 
-				ivec2 screenCoord = ivec2(texcoord * vec2(viewWidth, viewHeight)); // exact pixel coordinate onscreen
+		#if SOFTEN_SHADOWS == 2 
+				// use 16 samples - gives better results
 				vec2 texelSize = 1.0 / textureSize(shadowtex1, 0);
-				ivec2 noiseCoord = screenCoord % 64;
-				vec2 offset = vec2(texelFetch(noisetex, noiseCoord, 0).r);
 
-				shadow = ( // this may look horrific but it helps when it comes to performance on some lower end hardware
-					offset_lookup(offset + vec2(-3.0, -3.0), texelSize) +
-					offset_lookup(offset + vec2(-2.0, -3.0), texelSize) +
-					offset_lookup(offset + vec2(-1.0, -3.0), texelSize) +
-					offset_lookup(offset + vec2(0.0, -3.0), texelSize) +
-					offset_lookup(offset + vec2(1.0, -3.0), texelSize) +
-					offset_lookup(offset + vec2(2.0, -3.0), texelSize) +
-					offset_lookup(offset + vec2(3.0, -3.0), texelSize) +
+				for (float y = -1.5; y <= 1.5; y++) {
+					for (float x = -1.5; x<= 1.5; x++) {
+						shadow += offset_lookup(vec2(x,y), texelSize);
+					}
+				}
+				shadow /= 16;
+		#elif SOFTEN_SHADOWS == 1
+				// use 4 samples and dither - might be more performant on lower end hardware
+				vec2 texelSize = 1.0 / textureSize(shadowtex1, 0);
 
-					offset_lookup(offset + vec2(-3.0, -2.0), texelSize) +
-					offset_lookup(offset + vec2(-2.0, -2.0), texelSize) +
-					offset_lookup(offset + vec2(-1.0, -2.0), texelSize) +
-					offset_lookup(offset + vec2(0.0, -2.0), texelSize) +
-					offset_lookup(offset + vec2(1.0, -2.0), texelSize) +
-					offset_lookup(offset + vec2(2.0, -2.0), texelSize) +
-					offset_lookup(offset + vec2(3.0, -2.0), texelSize) +
+				ivec2 screenCoord = ivec2(texcoord * vec2(viewWidth, viewHeight)); // exact pixel coordinate onscreen
+				vec2 offset = vec2(greaterThan(fract(screenCoord.xy * 0.5), vec2(0.25)));
 
-					offset_lookup(offset + vec2(-3.0, -1.0), texelSize) +
-					offset_lookup(offset + vec2(-2.0, -1.0), texelSize) +
-					offset_lookup(offset + vec2(-1.0, -1.0), texelSize) +
-					offset_lookup(offset + vec2(0.0, -1.0), texelSize) +
-					offset_lookup(offset + vec2(1.0, -1.0), texelSize) +
-					offset_lookup(offset + vec2(2.0, -1.0), texelSize) +
-					offset_lookup(offset + vec2(3.0, -1.0), texelSize) +
-
-					offset_lookup(offset + vec2(-3.0, 0.0), texelSize) +
-					offset_lookup(offset + vec2(-2.0, 0.0), texelSize) +
-					offset_lookup(offset + vec2(-1.0, 0.0), texelSize) +
-					offset_lookup(offset + vec2(0.0, 0.0), texelSize) +
-					offset_lookup(offset + vec2(1.0, 0.0), texelSize) +
-					offset_lookup(offset + vec2(2.0, 0.0), texelSize) +
-					offset_lookup(offset + vec2(3.0, 0.0), texelSize) +
-
-					offset_lookup(offset + vec2(-3.0, 1.0), texelSize) +
-					offset_lookup(offset + vec2(-2.0, 1.0), texelSize) +
-					offset_lookup(offset + vec2(-1.0, 1.0), texelSize) +
-					offset_lookup(offset + vec2(0.0, 1.0), texelSize) +
-					offset_lookup(offset + vec2(1.0, 1.0), texelSize) +
-					offset_lookup(offset + vec2(2.0, 1.0), texelSize) +
-					offset_lookup(offset + vec2(3.0, 1.0), texelSize) +
-
-					offset_lookup(offset + vec2(-3.0, 2.0), texelSize) +
-					offset_lookup(offset + vec2(-2.0, 2.0), texelSize) +
-					offset_lookup(offset + vec2(-1.0, 2.0), texelSize) +
-					offset_lookup(offset + vec2(0.0, 2.0), texelSize) +
-					offset_lookup(offset + vec2(1.0, 2.0), texelSize) +
-					offset_lookup(offset + vec2(2.0, 2.0), texelSize) +
-					offset_lookup(offset + vec2(3.0, 2.0), texelSize) +
-
-					offset_lookup(offset + vec2(-3.0, 3.0), texelSize) +
-					offset_lookup(offset + vec2(-2.0, 3.0), texelSize) +
-					offset_lookup(offset + vec2(-1.0, 3.0), texelSize) +
-					offset_lookup(offset + vec2(0.0, 3.0), texelSize) +
-					offset_lookup(offset + vec2(1.0, 3.0), texelSize) +
-					offset_lookup(offset + vec2(2.0, 3.0), texelSize) +
-					offset_lookup(offset + vec2(3.0, 3.0), texelSize)
-				) * 0.02040816326;
-
+				offset.y += offset.x;
+				if (offset.y > 1.1) {
+  					offset.y = 0;
+				}
+				shadow = ( 
+						offset_lookup(offset + vec2(-1.5, -0.5), texelSize) +
+						offset_lookup(offset + vec2(0.5, 0.5), texelSize) +
+						offset_lookup(offset + vec2(-1.5, -1.5), texelSize) +
+						offset_lookup(offset + vec2(0.5, -1.5), texelSize) 
+				) * 0.25;
 		#else
 			if (texture2D(shadowtex1, shadowPos.xy).r < shadowPos.z) {
 				shadow = 1.0;
@@ -123,3 +86,4 @@ void main() {
 	/* DRAWBUFFERS:0 */
 	gl_FragData[0] = color; //gcolor
 }
+

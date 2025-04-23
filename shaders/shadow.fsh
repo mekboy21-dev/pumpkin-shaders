@@ -7,7 +7,7 @@ varying vec2 texcoord;
 varying vec4 glcolor;
 
 void main() {
-    #if SHADOWS_ENABLED == 1
+    #ifdef SHADOWS_ENABLED
 	    vec4 color = texture2D(texture, texcoord) * glcolor;
 
     /* DRAWBUFFERS:0 */

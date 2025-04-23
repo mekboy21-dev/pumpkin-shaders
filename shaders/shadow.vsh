@@ -10,7 +10,7 @@ varying vec4 glcolor;
 #include "/shadow_distort.glsl"
 
 void main() {
-    #if SHADOWS_ENABLED == 1
+    #ifdef SHADOWS_ENABLED
         texcoord = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
         lmcoord  = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
         glcolor = gl_Color;

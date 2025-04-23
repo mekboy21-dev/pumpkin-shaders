@@ -23,7 +23,7 @@ void main() {
 	lightDot = clamp(dot(normalize(shadowLightPosition), normalize(gl_NormalMatrix * gl_Normal)), 0., 1.);
 	if (mc_Entity.x == 10000.0) lightDot = 1.0;
 
-	#if SHADOWS_ENABLED == 1
+	#ifdef SHADOWS_ENABLED
 		vec4 viewPos = gl_ModelViewMatrix * gl_Vertex;
 		if (lightDot > 0.01) { // the 0.01 here helps prevent against flickering on the north face of blocks
 			// in sunlight 
