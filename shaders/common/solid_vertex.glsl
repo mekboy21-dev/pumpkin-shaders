@@ -25,7 +25,7 @@ void main() {
 
 	#ifdef SHADOWS_ENABLED
 		vec4 viewPos = gl_ModelViewMatrix * gl_Vertex;
-		if (lightDot > 0.01) { // the 0.01 here helps prevent against flickering on the north face of blocks
+		if (lightDot > 0.02) { // the 0.02 here helps prevent against flickering on the north face of blocks
 			// in sunlight 
 			vec4 playerPos = gbufferModelViewInverse * viewPos;
 			shadowPos = shadowProjection * (shadowModelView * playerPos);

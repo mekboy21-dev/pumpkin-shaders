@@ -31,7 +31,7 @@ float offset_lookup(vec2 offset, vec2 texelSize){
 
 #if SOFTEN_SHADOWS == 3
 	float getNoise(vec2 coord) {
-		ivec2 noisCoord = ivec2(texcoord * vec2(viewWidth, viewHeight)) % 64;
+		ivec2 noisCoord = ivec2(texcoord * vec2(viewWidth, viewHeight)) % 256;
 		return texelFetch(noisetex, noisCoord, 0).r;
 	}
 #endif
@@ -49,7 +49,7 @@ void main() {
 				// 16 samples but further blurred using noise
 				vec2 texelSize = 1.0 / textureSize(shadowtex1, 0);
 
-				float theta = getNoise(texcoord) * radians(360.0); // random angle using noise value
+				float theta = getNoise(texcoord); // random angle using noise value
   				float cosTheta = cos(theta);
   				float sinTheta = sin(theta);
 
@@ -96,7 +96,7 @@ void main() {
 			}
 		#endif
 
-		if (lightDot > 0.01) { // the 0.01 here helps prevent against flickering on the north face of blocks
+		if (lightDot > 0.02) { // the 0.02 here helps prevent against flickering on the north face of blocks
 			color.rgb *= clamp(torch_color * lmcoord.x + (lightDot * sky * sky_light_color) + sky * 0.5+ (AMBIENT * sky_light_color), 0. ,1.);
 			color.rgb *= SHADOW_BRIGHTNESS * shadow + (1.0 - shadow);
 		}
