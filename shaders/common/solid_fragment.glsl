@@ -27,6 +27,15 @@ float offset_lookup(vec2 offset, vec2 texelSize){
 }
 #endif
 
+
+
+#if SOFTEN_SHADOWS == 3
+	float getNoise(vec2 coord) {
+		ivec2 noisCoord = ivec2(texcoord * vec2(viewWidth, viewHeight)) % 64;
+		return texelFetch(noisetex, noisCoord, 0).r;
+	}
+#endif
+
 void main() {
 	vec4 color = texture2D(texture, texcoord) * glcolor;
 	vec3 torch_color = vec3(BLOCK_LIGHT_COLOR_R, BLOCK_LIGHT_COLOR_G, BLOCK_LIGHT_COLOR_B) * BLOCK_LIGHT_BRIGHTNESS;
@@ -37,14 +46,21 @@ void main() {
 	#ifdef SHADOWS_ENABLED
 		float shadow = 0.0;
 		#if SOFTEN_SHADOWS == 3 
-				// use 16 samples - gives better results
+				// 16 samples but further blurred using noise
 				vec2 texelSize = 1.0 / textureSize(shadowtex1, 0);
 
-				for (float y = -1.5; y <= 1.5; y++) {
-					for (float x = -1.5; x<= 1.5; x++) {
-						shadow += offset_lookup(vec2(x,y), texelSize);
+				float theta = getNoise(texcoord) * radians(360.0); // random angle using noise value
+  				float cosTheta = cos(theta);
+  				float sinTheta = sin(theta);
+
+ 				mat2 offset = mat2(cosTheta, -sinTheta, sinTheta, cosTheta); // matrix to rotate the offset around the original position by the angle
+									
+				for(float x = -1.5; x <= 1.5; ++x) {
+					for(float y = -1.5; y <= 1.5; ++y) {
+						shadow += offset_lookup(offset * vec2(x,y), texelSize);
 					}
 				}
+
 				shadow /= 16.0;
 		#elif SOFTEN_SHADOWS == 2
 				// nine samples - how it was implemented in V.0.5
