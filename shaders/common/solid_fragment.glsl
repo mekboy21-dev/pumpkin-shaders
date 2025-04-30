@@ -18,9 +18,9 @@ varying vec4 shadowPos;
 #include "/settings.glsl"
 
 #if SOFTEN_SHADOWS != 0 
-float offset_lookup(vec2 offset, vec2 texelSize){
+float offset_lookup(vec2 offset){
 	float result = 0.;
-	float pcfDepth = texture2D(shadowtex1, shadowPos.xy + offset * texelSize).r; 
+	float pcfDepth = texture2D(shadowtex1, shadowPos.xy + offset * (1.0 / vec2(shadowMapResolution))).r;
    	result += shadowPos.z > pcfDepth  ? 1.0 : 0.0;   
 
 	return result;
@@ -31,8 +31,10 @@ float offset_lookup(vec2 offset, vec2 texelSize){
 
 #if SOFTEN_SHADOWS == 3
 	float getNoise(vec2 coord) {
-		ivec2 noisCoord = ivec2(texcoord * vec2(viewWidth, viewHeight)) % 256;
-		return texelFetch(noisetex, noisCoord, 0).r;
+		//vec2 noiseUV = mod(texcoord * vec2(viewWidth, viewHeight), 256.0) / 256.0;
+		//return texture2D(noisetex, noiseUV).r;
+
+		return fract(sin(dot(floor(coord * 256.0), vec2(127.1, 311.7))) * 43758.5453);
 	}
 #endif
 
@@ -47,8 +49,6 @@ void main() {
 		float shadow = 0.0;
 		#if SOFTEN_SHADOWS == 3 
 				// 16 samples but further blurred using noise
-				vec2 texelSize = 1.0 / textureSize(shadowtex1, 0);
-
 				float theta = getNoise(texcoord); // random angle using noise value
   				float cosTheta = cos(theta);
   				float sinTheta = sin(theta);
@@ -57,26 +57,23 @@ void main() {
 									
 				for(float x = -1.5; x <= 1.5; ++x) {
 					for(float y = -1.5; y <= 1.5; ++y) {
-						shadow += offset_lookup(offset * vec2(x,y), texelSize);
+						shadow += offset_lookup(offset * vec2(x,y));
 					}
 				}
 
 				shadow /= 16.0;
 		#elif SOFTEN_SHADOWS == 2
 				// nine samples - how it was implemented in V.0.5
-				vec2 texelSize = 1.0 / textureSize(shadowtex1, 0);
 									
 				for(int x = -1; x <= 1; ++x) {
 					for(int y = -1; y <= 1; ++y) {
-						shadow += offset_lookup(vec2(x,y), texelSize);
+						shadow += offset_lookup(vec2(x,y));
 					}
 				}
 
 				shadow /= 9.0;
 		#elif SOFTEN_SHADOWS == 1
 				// use 4 samples and dither - might be more performant on lower end hardware
-				vec2 texelSize = 1.0 / textureSize(shadowtex1, 0);
-
 				ivec2 screenCoord = ivec2(texcoord * vec2(viewWidth, viewHeight)); // exact pixel coordinate onscreen
 				vec2 offset = vec2(greaterThan(fract(screenCoord.xy * 0.5), vec2(0.25)));
 
@@ -85,10 +82,10 @@ void main() {
   					offset.y = 0;
 				}
 				shadow = ( 
-						offset_lookup(offset + vec2(-1.5, -0.5), texelSize) +
-						offset_lookup(offset + vec2(0.5, 0.5), texelSize) +
-						offset_lookup(offset + vec2(-1.5, -1.5), texelSize) +
-						offset_lookup(offset + vec2(0.5, -1.5), texelSize) 
+						offset_lookup(offset + vec2(-1.5, -0.5)) +
+						offset_lookup(offset + vec2(0.5, 0.5)) +
+						offset_lookup(offset + vec2(-1.5, -1.5)) +
+						offset_lookup(offset + vec2(0.5, -1.5))
 				) * 0.25;
 		#else
 			if (texture2D(shadowtex1, shadowPos.xy).r < shadowPos.z) {
@@ -102,7 +99,7 @@ void main() {
 		}
 
 		if (shadowPos == vec4(0.)) {
-			color.rgb *= torch_color * lmcoord.x + (1. - SHADOW_BRIGHTNESS) * sky;
+			color.rgb *= torch_color * lmcoord.x + (1. - SHADOW_BRIGHTNESS) * sky + (AMBIENT * sky_light_color);
 		}
 
 	#else

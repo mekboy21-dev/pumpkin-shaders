@@ -15,6 +15,7 @@
 #define SOFTEN_SHADOWS 2 //[0 1 2 3]
 #define SHADOW_BRIGHTNESS 0.75
 const int shadowMapResolution = 1024; //[256 1024 2048 4096]
+const int noiseTextureResolution = 256;
 
 #if SOFTEN_SHADOWS != 0
     const bool shadowtex1Nearest = true; 
