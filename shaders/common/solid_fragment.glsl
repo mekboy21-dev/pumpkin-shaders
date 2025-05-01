@@ -18,9 +18,9 @@ varying vec4 shadowPos;
 #include "/settings.glsl"
 
 #if SOFTEN_SHADOWS != 0 
-float offset_lookup(vec2 offset){
+float offset_lookup(vec2 offset, vec2 texelSize){
 	float result = 0.;
-	float pcfDepth = texture2D(shadowtex1, shadowPos.xy + offset * (1.0 / vec2(shadowMapResolution))).r;
+	float pcfDepth = texture2D(shadowtex1, shadowPos.xy + offset * texelSize).r;
    	result += shadowPos.z > pcfDepth  ? 1.0 : 0.0;   
 
 	return result;
@@ -31,10 +31,8 @@ float offset_lookup(vec2 offset){
 
 #if SOFTEN_SHADOWS == 3
 	float getNoise(vec2 coord) {
-		//vec2 noiseUV = mod(texcoord * vec2(viewWidth, viewHeight), 256.0) / 256.0;
-		//return texture2D(noisetex, noiseUV).r;
-
-		return fract(sin(dot(floor(coord * 256.0), vec2(127.1, 311.7))) * 43758.5453);
+		vec2 noiseUV = fract(texcoord * vec2(viewWidth, viewHeight) / 256.0);
+		return texture2D(noisetex, noiseUV).r;
 	}
 #endif
 
@@ -54,20 +52,24 @@ void main() {
   				float sinTheta = sin(theta);
 
  				mat2 offset = mat2(cosTheta, -sinTheta, sinTheta, cosTheta); // matrix to rotate the offset around the original position by the angle
-									
+
+				vec2 texelSize = 1.0 / vec2(shadowMapResolution);
+
 				for(float x = -1.5; x <= 1.5; ++x) {
 					for(float y = -1.5; y <= 1.5; ++y) {
-						shadow += offset_lookup(offset * vec2(x,y));
+						shadow += offset_lookup(offset * vec2(x,y), texelSize);
 					}
 				}
 
 				shadow /= 16.0;
 		#elif SOFTEN_SHADOWS == 2
 				// nine samples - how it was implemented in V.0.5
-									
+
+				vec2 texelSize = 1.0 / vec2(shadowMapResolution);
+
 				for(int x = -1; x <= 1; ++x) {
 					for(int y = -1; y <= 1; ++y) {
-						shadow += offset_lookup(vec2(x,y));
+						shadow += offset_lookup(vec2(x,y), texelSize);
 					}
 				}
 
@@ -77,15 +79,17 @@ void main() {
 				ivec2 screenCoord = ivec2(texcoord * vec2(viewWidth, viewHeight)); // exact pixel coordinate onscreen
 				vec2 offset = vec2(greaterThan(fract(screenCoord.xy * 0.5), vec2(0.25)));
 
+				vec2 texelSize = 1.0 / vec2(shadowMapResolution);
+
 				offset.y += offset.x;
 				if (offset.y > 1.1) {
   					offset.y = 0;
 				}
 				shadow = ( 
-						offset_lookup(offset + vec2(-1.5, -0.5)) +
-						offset_lookup(offset + vec2(0.5, 0.5)) +
-						offset_lookup(offset + vec2(-1.5, -1.5)) +
-						offset_lookup(offset + vec2(0.5, -1.5))
+						offset_lookup(offset + vec2(-1.5, -0.5), texelSize) +
+						offset_lookup(offset + vec2(0.5, 0.5), texelSize) +
+						offset_lookup(offset + vec2(-1.5, -1.5), texelSize) +
+						offset_lookup(offset + vec2(0.5, -1.5), texelSize)
 				) * 0.25;
 		#else
 			if (texture2D(shadowtex1, shadowPos.xy).r < shadowPos.z) {
