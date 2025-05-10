@@ -17,10 +17,10 @@
 const int shadowMapResolution = 1024; //[256 1024 2048 4096]
 const int noiseTextureResolution = 256;
 
-#if SOFTEN_SHADOWS != 0
-    const bool shadowtex1Nearest = true; 
-    const bool shadowcolor0Nearest = true;
-#else
+#if SOFTEN_SHADOWS == 0
     const bool shadowtex1Nearest = false; 
     const bool shadowcolor0Nearest = false;
+#else
+    const bool shadowtex1Nearest = true; 
+    const bool shadowcolor0Nearest = true;
 #endif
