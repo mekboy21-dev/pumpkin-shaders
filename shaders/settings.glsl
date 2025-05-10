@@ -14,6 +14,9 @@
 #define SHADOW_DISTORT_FACTOR 0.2
 #define SOFTEN_SHADOWS 2 //[0 1 2 3]
 #define SHADOW_BRIGHTNESS 0.75
+
+#define FXAA
+
 const int shadowMapResolution = 1024; //[256 1024 2048 4096]
 const int noiseTextureResolution = 256;
 
