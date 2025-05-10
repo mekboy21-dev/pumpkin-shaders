@@ -123,9 +123,9 @@ void main() {
 
 	for(int i = 0; i < FXAA_SEARCH_STEPS; i++) {
 		if(!doneN) lumaEndN =
-			getLuma(texture2DLod(colortex0, coordN.xy, 0.0).rgb);
+			getLuma(texture2D(colortex0, coordN.xy).rgb);
 		if(!doneP) lumaEndP =
-			getLuma(texture2DLod(colortex0, coordP.xy, 0.0).rgb);
+			getLuma(texture2D(colortex0, coordP.xy).rgb);
 		
 		doneN = doneN || (abs(lumaEndN - lumaN) >= gradientN);
 		doneP = doneP || (abs(lumaEndP - lumaN) >= gradientN);
@@ -146,9 +146,9 @@ void main() {
 	dstN = directionN ? dstN : dstP;
 	float subPixelOffset = (0.5 + (dstN * (-1.0/spanLength))) * lengthSign;
 
-	vec3 rgbF = texture2DLod(colortex0, vec2(
+	vec3 rgbF = texture2D(colortex0, vec2(
 		texcoord.x + (horizontalSpan ? 0.0 : subPixelOffset),
-		texcoord.y + (horizontalSpan ? subPixelOffset : 0.0)), 0.0).rgb;
+		texcoord.y + (horizontalSpan ? subPixelOffset : 0.0))).rgb;
 
 /* DRAWBUFFERS:0 */
 	gl_FragData[0] = vec4(
