@@ -98,16 +98,20 @@ void main() {
 		#endif
 
 		if (lightDot > 0.02) { // the 0.02 here helps prevent against flickering on the north face of blocks
-			color.rgb *= clamp(torch_color * lmcoord.x + (lightDot * sky * sky_light_color) + sky * 0.5+ (AMBIENT * sky_light_color), 0. ,1.);
+			color.rgb *= clamp((lightDot * sky_light_color) + (lmcoord.x * torch_color) + (lmcoord.y * sky_light_color) + AMBIENT, 0., 1.);
 			color.rgb *= SHADOW_BRIGHTNESS * shadow + (1.0 - shadow);
 		}
 
 		if (shadowPos == vec4(0.)) {
-			color.rgb *= torch_color * lmcoord.x + (1. - SHADOW_BRIGHTNESS) * sky + (AMBIENT * sky_light_color);
+			color.rgb *= clamp((lightDot * sky_light_color) + (lmcoord.x * torch_color) + (lmcoord.y * sky_light_color) + AMBIENT, 0., 1.);
+			color *= SHADOW_BRIGHTNESS;
 		}
 
 	#else
-		color.rgb *= clamp(torch_color * lmcoord.x + (lightDot * sky * sky_light_color) + sky * 0.5+ (AMBIENT * sky_light_color), 0. ,1.);
+		//color.rgb *= clamp(torch_color * lmcoord.x + (lightDot * sky * sky_light_color) + sky * 0.5+ (AMBIENT * sky_light_color), 0. ,1.);
+
+		 //TODO maybe add a sunlight + moonlight color setting
+		color.rgb *= clamp((lightDot * sky_light_color) + (lmcoord.x * torch_color) + (lmcoord.y * sky_light_color) + AMBIENT, 0., 1.);
 	#endif
 	color *= texture2D(lightmap, lmcoord);
     color.rgb = mix(color.rgb, entityColor.rgb, entityColor.a);
