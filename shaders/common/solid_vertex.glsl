@@ -20,9 +20,11 @@ void main() {
 	lmcoord  = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
 	glcolor = gl_Color;
 
+	// calculate lightDot
 	lightDot = clamp(dot(normalize(shadowLightPosition), normalize(gl_NormalMatrix * gl_Normal)), 0., 1.);
 	if (mc_Entity.x == 10000.0) lightDot = 1.0;
 
+	// calculate shadows
 	#ifdef SHADOWS_ENABLED
 		vec4 viewPos = gl_ModelViewMatrix * gl_Vertex;
 		if (lightDot > 0.02) { // the 0.02 here helps prevent against flickering on the north face of blocks

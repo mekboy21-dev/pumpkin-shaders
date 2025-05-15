@@ -14,6 +14,7 @@ void main() {
 	lmcoord  = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
 	glcolor = gl_Color;
 
+	// calculate lightDot
 	lightDot = clamp(dot(normalize(shadowLightPosition), normalize(gl_NormalMatrix * gl_Normal)), 0., 1.);
 	if (mc_Entity.x == 10000.0) lightDot = 1.0;
 }

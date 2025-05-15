@@ -8,6 +8,7 @@ varying vec2 texcoord;
 varying vec4 glcolor;
 
 void main() {
+	// calculate color
 	vec4 color = texture2D(texture, texcoord) * ((glcolor / 1.5) * texture2D(lightmap, lmcoord));
 	color *= texture2D(lightmap, lmcoord);
 

@@ -10,6 +10,7 @@ uniform vec3 skyColor;
 varying vec4 starData; //rgb = star color, a = flag for weather or not this pixel is a star.
 
 void main() {
+	// we use fog color so the sky is one solid color
 	vec3 color;
 	color = fogColor;
 	if (starData.a > 0.5) {
