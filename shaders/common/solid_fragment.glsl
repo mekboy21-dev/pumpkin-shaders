@@ -30,7 +30,7 @@ float offset_lookup(vec2 offset, vec2 texelSize){
 
 #if SOFTEN_SHADOWS == 3
 	float getNoise(vec2 coord) {
-		vec2 noiseUV = fract(texcoord * vec2(viewWidth, viewHeight) / 256.0);
+		vec2 noiseUV = texcoord * vec2(viewWidth, viewHeight / noiseTextureResolution);
 		return texture2D(noisetex, noiseUV).r;
 	}
 #endif

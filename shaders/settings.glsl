@@ -27,7 +27,7 @@
 #define FXAA
 
 const int shadowMapResolution = 1024; //[256 1024 2048 4096]
-const int noiseTextureResolution = 1024;
+const int noiseTextureResolution = 256;
 
 #if SOFTEN_SHADOWS == 0
     const bool shadowtex1Nearest = false; 

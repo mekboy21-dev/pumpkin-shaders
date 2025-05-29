@@ -22,7 +22,7 @@ void main() {
 
 	// calculate lightDot
 	lightDot = clamp(dot(normalize(shadowLightPosition), normalize(gl_NormalMatrix * gl_Normal)), 0., 1.);
-	if (mc_Entity.x == 10000.0) lightDot = 1.0;
+	if (mc_Entity.x == 10002.0) lightDot = 1.0;
 
 	// calculate shadows
 	#ifdef SHADOWS_ENABLED
