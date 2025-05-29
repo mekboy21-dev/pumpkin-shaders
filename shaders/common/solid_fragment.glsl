@@ -8,6 +8,7 @@ uniform float viewWidth;
 uniform float viewHeight;
 
 uniform vec4 entityColor;
+uniform vec3 fogColor;
 
 varying vec2 lmcoord;
 varying vec2 texcoord;
@@ -38,7 +39,12 @@ void main() {
 	// define variables ready for lighting calculations
 	vec4 color = texture2D(texture, texcoord) * glcolor;
 	vec3 torch_color = vec3(BLOCK_LIGHT_COLOR_R, BLOCK_LIGHT_COLOR_G, BLOCK_LIGHT_COLOR_B) * BLOCK_LIGHT_BRIGHTNESS;
-	vec3 sky_light_color = vec3(SKY_LIGHT_COLOR_R, SKY_LIGHT_COLOR_G, SKY_LIGHT_COLOR_B);
+	#if CUSTOM_SKY_COLOR == 1
+		vec3 sky_light_color = vec3(SKY_LIGHT_COLOR_R, SKY_LIGHT_COLOR_G, SKY_LIGHT_COLOR_B) * SKY_LIGHT_BRIGHTNESS;
+	#else
+		vec3 sky_light_color = fogColor * 0.3;
+	#endif
+	vec3 sun_light_color = vec3(SUN_LIGHT_COLOR_R, SUN_LIGHT_COLOR_G, SUN_LIGHT_COLOR_B) * SUN_LIGHT_BRIGHTNESS;
 	
 	#ifdef SHADOWS_ENABLED
 		// calculate shadows
@@ -100,22 +106,22 @@ void main() {
 		// final lighting calculations
 		if (lightDot > 0.02) { // the 0.02 here helps prevent against flickering on the north face of blocks
 			// calculate lighting
-			color.rgb *= clamp((lightDot * sky_light_color) + (lmcoord.x * torch_color) + (lmcoord.y * sky_light_color) + AMBIENT, 0., 1.);
+			color.rgb *= (lightDot * sun_light_color) + (lmcoord.x * torch_color) + (lmcoord.y * sky_light_color) + AMBIENT;
 			// darken based on shadow variable
-			color.rgb *= SHADOW_BRIGHTNESS * shadow + (1.0 - shadow);
+			color.rgb *= (SHADOW_BRIGHTNESS * shadow + (1.0 - shadow));
 		}
 
 		if (shadowPos == vec4(0.)) {
 			// pixel is 100% in shadow
 			// calculate lighting
-			color.rgb *= clamp((lightDot * sky_light_color) + (lmcoord.x * torch_color) + (lmcoord.y * sky_light_color) + AMBIENT, 0., 1.);
+			color.rgb *= (lightDot * sun_light_color) + (lmcoord.x * torch_color) + (lmcoord.y * sky_light_color) + AMBIENT;
 			// darken
 			color.rgb *= SHADOW_BRIGHTNESS;
 		}
 
 	#else
 		// calculate lighting
-		color.rgb *= clamp((lightDot * sky_light_color) + (lmcoord.x * torch_color) + (lmcoord.y * sky_light_color) + AMBIENT, 0., 1.);
+		color.rgb *= (lightDot * sun_light_color) + (lmcoord.x * torch_color) + (lmcoord.y * sky_light_color) + AMBIENT;
 	#endif
 
 	color *= texture2D(lightmap, lmcoord); // lightmap
