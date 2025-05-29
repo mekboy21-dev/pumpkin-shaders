@@ -11,6 +11,7 @@ varying vec4 glcolor;
 varying float lightDot;
 varying vec4 shadowPos;
 varying float bias;
+varying float brightness;
 
 #include "/settings.glsl"
 #include "/shadow_distort.glsl"
@@ -22,7 +23,7 @@ void main() {
 
 	// calculate lightDot
 	lightDot = clamp(dot(normalize(shadowLightPosition), normalize(gl_NormalMatrix * gl_Normal)), 0., 1.);
-	if (mc_Entity.x == 10002.0) lightDot = 1.0;
+	if (mc_Entity.x == 10002.0) lightDot += 0.5;
 
 	// calculate shadows
 	#ifdef SHADOWS_ENABLED
@@ -40,7 +41,14 @@ void main() {
 		} else {
 			shadowPos = vec4(0.0);
 		}
-
+		
+		if (mc_Entity.x == 10000.0) {
+			lightDot = 1.0;
+			brightness = 1.5;
+			shadowPos = vec4(0.1);
+		} else {
+			brightness = 1.0;
+		}
 		
 		gl_Position = gl_ProjectionMatrix * viewPos;
 

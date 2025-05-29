@@ -26,6 +26,9 @@
 
 #define FXAA
 
+#define USE_FOG_COLOR_FOR_SKY
+#define SOLID_COLOR_CLOUDS
+
 const int shadowMapResolution = 1024; //[256 1024 2048 4096]
 const int noiseTextureResolution = 256;
 

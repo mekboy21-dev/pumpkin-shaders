@@ -15,6 +15,7 @@ varying vec2 texcoord;
 varying vec4 glcolor;
 varying float lightDot;
 varying vec4 shadowPos;
+varying float brightness;
 
 #include "/settings.glsl"
 
@@ -103,12 +104,18 @@ void main() {
 			}
 		#endif
 
+		if (brightness > 1.0) {
+			// glowing
+			shadow = 0.0;
+			color.rgb * brightness;
+		}
+
 		// final lighting calculations
 		if (lightDot > 0.02) { // the 0.02 here helps prevent against flickering on the north face of blocks
 			// calculate lighting
 			color.rgb *= (lightDot * sun_light_color) + (lmcoord.x * torch_color) + (lmcoord.y * sky_light_color) + AMBIENT;
 			// darken based on shadow variable
-			color.rgb *= (SHADOW_BRIGHTNESS * shadow + (1.0 - shadow));
+			color.rgb *= (SHADOW_BRIGHTNESS * shadow + (1.0 - shadow)) + (sky_light_color * 0.5 * shadow);
 		}
 
 		if (shadowPos == vec4(0.)) {
@@ -116,7 +123,7 @@ void main() {
 			// calculate lighting
 			color.rgb *= (lightDot * sun_light_color) + (lmcoord.x * torch_color) + (lmcoord.y * sky_light_color) + AMBIENT;
 			// darken
-			color.rgb *= SHADOW_BRIGHTNESS;
+			color.rgb *= SHADOW_BRIGHTNESS + (sky_light_color * 0.5);
 		}
 
 	#else
