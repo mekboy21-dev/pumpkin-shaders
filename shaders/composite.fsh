@@ -1,6 +1,5 @@
 #version 120
 
-#define FOG_DENSITY 4.0
 
 uniform sampler2D colortex0;
 uniform sampler2D depthtex0;
@@ -10,6 +9,8 @@ uniform float far;
 uniform mat4 gbufferProjectionInverse;
 
 varying vec2 texcoord;
+
+#include "/settings.glsl"
 
 vec3 projectAndDivide(mat4 projectionMatrix, vec3 position){
   vec4 homPos = projectionMatrix * vec4(position, 1.0);
@@ -29,7 +30,7 @@ void main() {
 
     
     if (color.rgb != fogColor) {
-        color.rgb = mix(color.rgb, fogColor, clamp(exp(-FOG_DENSITY * (1.0 - length(viewPos) / far)), 0.0, 1.0)); // i honestly have no fucking idea why putting this all on one line is the only way i can get fog to work
+        color.rgb = mix(color.rgb, fogColor, clamp(pow(exp(-FOG_DENSITY * (1.0 - length(viewPos) / far)), 2), 0.0, 1.0)); // i honestly have no fucking idea why putting this all on one line is the only way i can get fog to work
     }
     
     /* DRAWBUFFERS:0 */

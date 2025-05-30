@@ -26,11 +26,12 @@
 
 #define FXAA
 
+#define FOG_DENSITY 4.0
 #define USE_FOG_COLOR_FOR_SKY
 #define SOLID_COLOR_CLOUDS
 
 const int shadowMapResolution = 1024; //[256 1024 2048 4096]
-const int noiseTextureResolution = 256;
+const int noiseTextureResolution = 128;
 
 #if SOFTEN_SHADOWS == 0
     const bool shadowtex1Nearest = false; 
