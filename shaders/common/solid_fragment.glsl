@@ -48,77 +48,71 @@ void main() {
 	#endif
 	vec3 sun_light_color = vec3(SUN_LIGHT_COLOR_R, SUN_LIGHT_COLOR_G, SUN_LIGHT_COLOR_B) * SUN_LIGHT_BRIGHTNESS;
 	
+	color.rgb * brightness;
 	#ifdef SHADOWS_ENABLED
-		// calculate shadows
-		float shadow = 0.0;
-
-		// workout where shadow is & soften if enabled
-		#if SOFTEN_SHADOWS == 3 
-				// 16 samples but further blurred using noise
-				float theta = getNoise(texcoord); // random angle using noise value
-  				float cosTheta = cos(theta);
-  				float sinTheta = sin(theta);
-
- 				mat2 offset = mat2(cosTheta, -sinTheta, sinTheta, cosTheta); // matrix to rotate the offset around the original position by the angle
-
-				for(float x = -1.5; x <= 1.5; ++x) {
-					for(float y = -1.5; y <= 1.5; ++y) {
-						shadow += offset_lookup(offset * vec2(x,y));
-					}
-				}
-
-				shadow /= 16.0;
-		#elif SOFTEN_SHADOWS == 2
-				// nine samples - how it was implemented in V.0.5
-
-				for(int x = -1; x <= 1; ++x) {
-					for(int y = -1; y <= 1; ++y) {
-						shadow += offset_lookup(vec2(x,y));
-					}
-				}
-
-				shadow /= 9.0;
-		#elif SOFTEN_SHADOWS == 1
-				// use 4 samples and dither - might be more performant on lower end hardware
-				ivec2 screenCoord = ivec2(texcoord * vec2(viewWidth, viewHeight)); // exact pixel coordinate onscreen
-				vec2 offset = vec2(greaterThan(fract(screenCoord.xy * 0.5), vec2(0.25))); 
-
-				offset.y += offset.x;
-				if (offset.y > 1.1) {
-  					offset.y = 0;
-				}
-				shadow = ( 
-						offset_lookup(offset + vec2(-1.5, -0.5)) +
-						offset_lookup(offset + vec2(0.5, 0.5)) +
-						offset_lookup(offset + vec2(-1.5, -1.5)) +
-						offset_lookup(offset + vec2(0.5, -1.5))
-				) * 0.25;
-		#else
-			if (texture2D(shadowtex1, shadowPos.xy).r < shadowPos.z) {
-				shadow = 1.0;
-			}
-		#endif
-
-		if (brightness > 1.0) {
-			// glowing
-			shadow = 0.0;
-			color.rgb * brightness;
-		}
-
 		// final lighting calculations
 		if (lightDot > 0.02) { // the 0.02 here helps prevent against flickering on the north face of blocks
 			// calculate lighting
-			color.rgb *= (lightDot * sun_light_color) + (lmcoord.x * torch_color) + (lmcoord.y * sky_light_color) + AMBIENT;
-			// darken based on shadow variable
-			color.rgb *= (SHADOW_BRIGHTNESS * shadow + (1.0 - shadow)) + (sky_light_color * 0.5 * shadow);
+			float shadow = 0.0;
+			// check if glowing
+			if (brightness > 1.0) {
+			} else {
+				// calculate shadows
+				// workout where shadow is & soften if enabled
+				#if SOFTEN_SHADOWS == 3 
+						// 16 samples but further blurred using noise
+						float theta = getNoise(texcoord); // random angle using noise value
+						float cosTheta = cos(theta);
+						float sinTheta = sin(theta);
+
+						mat2 offset = mat2(cosTheta, -sinTheta, sinTheta, cosTheta); // matrix to rotate the offset around the original position by the angle
+
+						for(float x = -1.5; x <= 1.5; ++x) {
+							for(float y = -1.5; y <= 1.5; ++y) {
+								shadow += offset_lookup(offset * vec2(x,y));
+							}
+						}
+
+						shadow /= 16.0;
+				#elif SOFTEN_SHADOWS == 2
+						// nine samples - how it was implemented in V.0.5
+
+						for(int x = -1; x <= 1; ++x) {
+							for(int y = -1; y <= 1; ++y) {
+								shadow += offset_lookup(vec2(x,y));
+							}
+						}
+
+						shadow /= 9.0;
+				#elif SOFTEN_SHADOWS == 1
+						// use 4 samples and dither - might be more performant on lower end hardware
+						ivec2 screenCoord = ivec2(texcoord * vec2(viewWidth, viewHeight)); // exact pixel coordinate onscreen
+						vec2 offset = vec2(greaterThan(fract(screenCoord.xy * 0.5), vec2(0.25))); 
+
+						offset.y += offset.x;
+						if (offset.y > 1.1) {
+							offset.y = 0;
+						}
+						shadow = ( 
+								offset_lookup(offset + vec2(-1.5, -0.5)) +
+								offset_lookup(offset + vec2(0.5, 0.5)) +
+								offset_lookup(offset + vec2(-1.5, -1.5)) +
+								offset_lookup(offset + vec2(0.5, -1.5))
+						) * 0.25;
+				#else
+					if (texture2D(shadowtex1, shadowPos.xy).r < shadowPos.z) {
+						shadow = 1.0;
+					}
+				#endif
+				shadow = clamp(shadow, 0.0, 1.0 - SHADOW_BRIGHTNESS);
+			}
+			color.rgb *= (lightDot * sun_light_color * (1.0 - shadow)) + (lmcoord.x * torch_color) + (lmcoord.y * sky_light_color) + AMBIENT;
 		}
 
 		if (shadowPos == vec4(0.)) {
 			// pixel is 100% in shadow
 			// calculate lighting
-			color.rgb *= (lightDot * sun_light_color) + (lmcoord.x * torch_color) + (lmcoord.y * sky_light_color) + AMBIENT;
-			// darken
-			color.rgb *= SHADOW_BRIGHTNESS + (sky_light_color * 0.5);
+			color.rgb *= (lightDot * sun_light_color * (1.0 - (1.0 -SHADOW_BRIGHTNESS))) + (lmcoord.x * torch_color) + (lmcoord.y * sky_light_color) + AMBIENT;
 		}
 
 	#else
