@@ -1,7 +1,7 @@
 uniform sampler2D lightmap;
 uniform sampler2D texture;
 
-uniform sampler2D shadowtex1;
+uniform sampler2DShadow shadowtex1;
 uniform sampler2D noisetex;
 
 uniform float viewWidth;
@@ -18,24 +18,6 @@ varying vec4 shadowPos;
 varying float brightness;
 
 #include "/settings.glsl"
-
-#if SOFTEN_SHADOWS != 0 
-float offset_lookup(vec2 offset){
-	offset /= shadowMapResolution;
-	float result = 0.;
-	float pcfDepth = texture2D(shadowtex1, shadowPos.xy + offset).r;
-   	result += shadowPos.z > pcfDepth  ? 1.0 : 0.0;   
-
-	return result;
-}
-#endif
-
-//#if SOFTEN_SHADOWS == 3
-	float getNoise(vec2 coord) {
-		vec2 noiseUV = texcoord * vec2(viewWidth, viewHeight / noiseTextureResolution);
-		return texture2D(noisetex, noiseUV).r;
-	}
-//#endif
 
 void main() {
 	// define variables ready for lighting calculations
@@ -58,53 +40,36 @@ void main() {
 			if (brightness > 1.0) {
 			} else {
 				// calculate shadows
-				// workout where shadow is & soften if enabled
-				#if SOFTEN_SHADOWS == 3 
-						// 16 samples but further blurred using noise
-						float theta = getNoise(texcoord); // random angle using noise value
-						float cosTheta = cos(theta);
-						float sinTheta = sin(theta);
 
-						mat2 offset = mat2(cosTheta, -sinTheta, sinTheta, cosTheta); // matrix to rotate the offset around the original position by the angle
+				#ifdef PCF		
+				    float xOffset = 1.0/shadowMapResolution;
+					float yOffset = 1.0/shadowMapResolution;
 
-						for(float x = -1.5; x <= 1.5; ++x) {
-							for(float y = -1.5; y <= 1.5; ++y) {
-								shadow += offset_lookup(offset * vec2(x,y));
-							}
+					float Factor = 0.0;
+
+					for (int y = -1 ; y <= 1 ; y++) {
+						for (int x = -1 ; x <= 1 ; x++) {
+							vec2 Offsets = vec2(x * xOffset, y * yOffset);
+							vec3 UVC = vec3(shadowPos.xy + Offsets, shadowPos.z + 0.00001);
+							#ifdef IS_IRIS
+								Factor += texture(shadowtex1, UVC);
+							#else
+								Factor += shadow2D(shadowtex1, UVC).r;
+							#endif
 						}
-
-						shadow /= 16.0;
-				#elif SOFTEN_SHADOWS == 2
-						// nine samples - how it was implemented in V.0.5
-
-						for(int x = -1; x <= 1; ++x) {
-							for(int y = -1; y <= 1; ++y) {
-								shadow += offset_lookup(vec2(x,y));
-							}
-						}
-
-						shadow /= 9.0;
-				#elif SOFTEN_SHADOWS == 1
-						// use 4 samples and dither - might be more performant on lower end hardware
-						ivec2 screenCoord = ivec2(texcoord * vec2(viewWidth, viewHeight)); // exact pixel coordinate onscreen
-						vec2 offset = vec2(greaterThan(fract(screenCoord.xy * 0.5), vec2(0.25))); 
-
-						offset.y += offset.x;
-						if (offset.y > 1.1) {
-							offset.y = 0;
-						}
-						shadow = ( 
-								offset_lookup(offset + vec2(-1.5, -0.5)) +
-								offset_lookup(offset + vec2(0.5, 0.5)) +
-								offset_lookup(offset + vec2(-1.5, -1.5)) +
-								offset_lookup(offset + vec2(0.5, -1.5))
-						) * 0.25;
-				#else
-					if (texture2D(shadowtex1, shadowPos.xy).r < shadowPos.z) {
-						shadow = 1.0;
 					}
+
+					Factor = (0.5 + (Factor / 18.0));
+
+					shadow = Factor;
+				#else 
+					#ifdef IS_IRIS
+						shadow = textureProj(shadowtex1, shadowPos);
+					#else
+						shadow = shadow2DProj(shadowtex1, shadowPos).r;
+					#endif
 				#endif
-				shadow = clamp(shadow, 0.0, 1.0 - SHADOW_BRIGHTNESS);
+				shadow = clamp(1.0 - shadow, 0.0, 1.0 - SHADOW_BRIGHTNESS);
 			}
 			color.rgb *= (lightDot * sun_light_color * (1.0 - shadow)) + (lmcoord.x * torch_color) + (lmcoord.y * sky_light_color) + AMBIENT;
 		}
