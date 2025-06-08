@@ -59,7 +59,7 @@ void main() {
 						}
 					}
 
-					Factor = (0.5 + (Factor / 18.0));
+					Factor = Factor / 9.0;
 
 					shadow = Factor;
 				#else 
@@ -72,7 +72,7 @@ void main() {
 				shadow = clamp(1.0 - shadow, 0.0, 1.0 - SHADOW_BRIGHTNESS);
 			}
 			color.rgb *= (lightDot * sun_light_color * (1.0 - shadow)) + (lmcoord.x * torch_color) + (lmcoord.y * sky_light_color) + AMBIENT;
-		}
+			}
 
 		if (shadowPos == vec4(0.)) {
 			// pixel is 100% in shadow
